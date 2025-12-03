@@ -1,0 +1,9 @@
+pdfplumber==0.11.0
+pandas==2.2.0
+openpyxl==3.1.2
+python-dotenv==1.0.1
+pathlib
+google-generativeai
+transformers
+torch
+requests
