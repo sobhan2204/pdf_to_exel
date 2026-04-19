@@ -1,22 +1,20 @@
-You will be given unstructured text extracted from a PDF.
-Your job is to:
+You will receive unstructured text extracted from a PDF.
 
-1. Identify all possible key: value pairs from the text.
-2. Do NOT predefine the keys. Infer keys logically based on meaning.
-3. Preserve the original text exactly — do not paraphrase.
-4. Ensure 100% data capture: do not omit anything.
-5. For every key: value extracted, add a "comments" field containing
-   contextual notes or surrounding sentences that add meaning.
-6. Output ONLY valid JSON array of objects:
-   [
-      {"key": "...", "value": "...", "comments": "..."},
-      ...
-   ]
+Goal:
+Convert the document into a structured JSON array where each row captures one atomic fact.
 
-Guidelines:
-- Extract dates, names, phone numbers, emails, addresses, amounts, IDs
-- Extract any labeled information (e.g., "Invoice Number: 12345")
-- Extract tables as separate key:value pairs
-- Preserve exact wording from the document
-- Do not skip any content
-- If uncertain about a key name, use a descriptive label
+Output format (strict):
+[
+  {"key": "...", "value": "...", "comments": "..."},
+  ...
+]
+
+Rules:
+1. Return ONLY valid JSON array. No markdown. No explanation text.
+2. Infer meaningful keys from context (e.g., "Date of Birth", "Current Salary", "Certification 1").
+3. Split complex sentences into multiple key/value rows when they contain multiple facts.
+4. Preserve source values faithfully. Do not invent values.
+5. Keep comments concise and contextual (why this value matters or nearby context).
+6. Avoid generic keys like "name" when a more specific label is possible.
+7. Include names (Full Name, First Name, Last Name when available), dates, amounts, currencies, years, scores, designations, organizations, education, and certifications when present.
+8. Avoid duplicate rows.
