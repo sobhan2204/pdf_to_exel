@@ -1,126 +1,119 @@
-# AI Document Structurer
+# AI-Powered Resume Parser & Job Matcher
 
-Convert an unstructured PDF into a structured Excel sheet using an LLM (Groq API) with a regex fallback.
+A Python-based intelligent pipeline that extracts unstructured text from PDF resumes, structures it into granular key-value pairs using Large Language Models (LLMs), and evaluates the candidate against a specific Job Description to generate a structured Excel report.
 
-## What this project does
+---
 
-The pipeline reads text from a PDF, structures it into rows of:
+## Features
 
-- `key`
-- `value`
-- `comments`
+- **Intelligent PDF Extraction:** Reads raw text from candidate resumes or profile PDFs.
+- **LLM-Powered Structuring:** Uses Groq (Llama 3) to break down unstructured text into atomic facts (e.g., Dates, Salaries, Education, Names).
+- **Automated Job Evaluation:** Cross-references the candidate's profile against a provided Job Requirements text file.
+- **Skill Categorization:** Automatically categorizes skills into:
+  - **Matched Skills:** Required skills the candidate possesses (with extracted proficiency).
+  - **Missing Skills:** Required skills the candidate lacks.
+  - **Additional Skills:** Extra skills the candidate has that aren't explicitly required.
+- **Efficacy Scoring:** Generates a percentage-based match score with reasoning.
+- **Regex Fallback:** Robust rule-based fallback extraction if LLM API limits are reached.
+- **Excel Export:** Outputs clean, formatted, and easily readable data into `.xlsx` spreadsheets.
 
-Then it writes those rows into `data/output/Output.xlsx`.
+---
 
-## How the pipeline works
+## Project Structure
 
-1. Extract text from PDF using `pdfplumber`.
-2. Send text to Groq LLM with strict JSON instructions.
-3. Parse and sanitize LLM JSON output.
-4. Enrich key fields (for example name fields) if needed.
-5. Fall back to regex extraction if LLM is unavailable.
-6. Write final structured rows to Excel.
+```text
+├── data/
+│   ├── input/
+│   │   ├── candidate_resume.pdf       # Place input PDFs here
+│   │   └── job_requirements.txt       # Define the job requirements here
+│   └── output/
+│       └── Output.xlsx                # Generated Excel reports
+├── prompts/
+│   └── prompt.text                    # Base instructions for the LLM
+├── src/
+│   ├── main.py                        # Entry point & CLI handler
+│   ├── extract.py                     # PDF reading logic
+│   ├── llm_structurer.py              # LLM chunking, prompting, and validation
+│   └── excel_writer.py                # Pandas/OpenPyXL formatting logic
+├── .env                               # API Keys (Not tracked in git)
+└── README.md
+```
 
-## Project structure and what each file does
-
-| Path | Purpose |
-| --- | --- |
-| `src/main.py` | Main entry point for the pipeline. Handles CLI args, selects input PDF, runs extract -> structure -> excel write. |
-| `src/extract.py` | Reads PDF and returns raw text content. |
-| `src/llm_structurer.py` | Core structuring logic: prompt loading, Groq call, JSON parsing, dedupe/sanitize, name enrichment, regex fallback. |
-| `src/excel_writer.py` | Writes structured rows to Excel (`#`, `Key`, `Value`, `Comments`) with formatting. |
-| `prompts/prompt.text` | Prompt template used for LLM extraction behavior. |
-| `data/input/` | Place input PDF files here. |
-| `data/output/` | Contains generated output Excel files. |
-| `data/output/Expected Output.xlsx` | Reference sample output. |
-| `data/output/Output.xlsx` | Actual generated output from the latest run. |
-| `requirements.txt` | Pip install dependencies. |
-| `pyproject.toml` | Project metadata and dependency definitions (PEP 621 style). |
-| `main.py` | Root-level placeholder script (not the pipeline entry point). |
-| `uv.lock` | Lockfile for uv-managed dependency resolution. |
-
-## Prerequisites
-
-- Python 3.12+
-- A Groq API key
+---
 
 ## Setup
 
-1. Create and activate virtual environment (optional but recommended).
-2. Install dependencies:
+### Install Dependencies
+
+Ensure you have Python 3.9+ installed. Install the required libraries:
 
 ```bash
-pip install -r requirements.txt
+pip install pandas openpyxl pdfplumber python-dotenv groq python-dateutil
 ```
 
-3. Add `.env` file at project root with:
+### Set up Environment Variables
+
+Create a `.env` file in the root directory and add your LLM API keys:
 
 ```env
 GROQ_API_KEY=your_groq_api_key_here
-```
 
-Optional:
-
-```env
+# Optional: Specify models
 GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
-## How to run
+---
 
-### Default mode (auto-select input)
+## Usage
 
-If no `--pdf` is provided, the newest PDF in `data/input/` is used.
+### 1. Prepare your inputs
 
-```bash
-python src/main.py
-```
+Drop a candidate's resume PDF into `data/input/`.
 
-### Explicit input PDF
+Create a text file containing the job description (e.g., `data/input/my_custom_job.txt`).
 
-```bash
-python src/main.py --pdf "data/input/job_application.pdf"
-```
+### 2. Run the Pipeline
 
-### Custom output path
+Execute the script from the root directory. You can specify the job description and output path via command-line arguments:
 
 ```bash
-python src/main.py --pdf "data/input/job_application.pdf" --output "data/output/MyOutput.xlsx"
+python src/main.py --job data/input/my_custom_job.txt --output data/output/Output_2.xlsx
 ```
 
-### Custom prompt file
+---
 
-```bash
-python src/main.py --prompt "prompts/prompt.text"
+## Command Line Arguments
+
+- `--pdf`: Path to the specific PDF to process.  
+  (If omitted, grabs the most recently modified PDF in `data/input/`).
+
+- `--job`: Path to the job requirements text file.  
+  (Defaults to `data/input/job_requirements.txt`).
+
+- `--output`: Path where the Excel file should be saved.  
+  (Defaults to `data/output/Output.xlsx`).
+
+- `--prompt`: Path to the base LLM prompt.  
+  (Defaults to `prompts/prompt.text`).
+
+---
+
+## Sample Output Format
+
+```
+#,Key,Value,Comments
+1,Full Name,Vijay Kumar,Extracted from source.
+2,Efficacy Score,85%,"Strong match for Data Engineer, but missing AWS certification."
+3,Matched Skill,Python,Proficiency: 9 out of 10
+4,Missing Skill,Docker,Required by job but not found in profile.
+5,Additional Skill,Tableau,Proficiency: 8 out of 10
 ```
 
-## CLI arguments
+---
 
-- `--pdf`: input PDF path (optional)
-- `--output`: output Excel path (default: `data/output/Output.xlsx`)
-- `--prompt`: prompt file path (default: `prompts/prompt.text`)
+## Authors
 
-## Output format
-
-The generated workbook contains sheet `Output` with columns:
-
-- `#`
-- `Key`
-- `Value`
-- `Comments`
-
-## Notes
-
-- Groq is the primary LLM provider.
-- If LLM extraction fails or is unavailable, regex fallback is used.
-- Name rows are validated/enriched so `Full Name`, `First Name`, and `Last Name` are preserved when detectable.
-
-## Troubleshooting
-
-- `No PDF files found in data/input`:
-	Add at least one PDF to `data/input/` or pass `--pdf`.
-
-- `GROQ_API_KEY` not set:
-	Add it to `.env`; otherwise extraction may fall back to regex mode.
-
-- Output does not reflect expected file:
-	Use `--pdf` to force the exact document path.
+Sobhan Panda  
+Raghvendra Shaktawat  
+Divyansh Sharma  
+Divyansh Dutt Sharma
