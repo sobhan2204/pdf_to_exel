@@ -2,7 +2,6 @@ import argparse
 import sys
 from pathlib import Path
 
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.extract import extract_text_from_pdf
@@ -10,13 +9,7 @@ from src.llm_structurer import structure_text_with_llm
 from src.excel_writer import write_to_excel
 
 
-def _resolve_pdf_path(pdf_path: str | None = None) -> str:
-    """Resolve input PDF path.
-
-    Priority:
-    1) Explicit path passed by user
-    2) Most recently modified PDF in data/input/
-    """
+def resolve_pdf_path(pdf_path: str | None = None) -> str:
     if pdf_path:
         return pdf_path
 
@@ -32,7 +25,7 @@ def _resolve_pdf_path(pdf_path: str | None = None) -> str:
     return str(latest_pdf)
 
 
-def _parse_args() -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PDF to structured Excel pipeline")
     parser.add_argument(
         "--pdf",
@@ -52,34 +45,44 @@ def _parse_args() -> argparse.Namespace:
         default="prompts/prompt.text",
         help="Path to prompt instructions.",
     )
+    parser.add_argument(
+        "--job",
+        dest="job_path",
+        default="data/input/job_requirements.txt",
+        help="Path to the job requirements text file.",
+    )
     return parser.parse_args()
 
 
 def main(pdf_path: str | None = None,
          output_path: str = "data/output/Output.xlsx",
-         prompt_path: str = "prompts/prompt.text"):
-    """
-    Main pipeline: PDF → Structured Data → Excel
+         prompt_path: str = "prompts/prompt.text",
+         job_path: str = "data/input/job_requirements.txt"):
     
-    Args:
-        pdf_path: Path to input PDF file
-        output_path: Path for output Excel file
-        prompt_path: Path to prompt instructions
-    """
     print("=" * 60)
     print(" DOCUMENTED :) ")
     print("=" * 60)
     
     try:
-        selected_pdf_path = _resolve_pdf_path(pdf_path)
+        selected_pdf_path = resolve_pdf_path(pdf_path)
         print(f" Input PDF selected: {selected_pdf_path}")
+
+        # Load job requirements if provided
+        job_desc = ""
+        job_file = Path(job_path)
+        if job_file.exists():
+            job_desc = job_file.read_text(encoding="utf-8")
+            print(f" Loaded job requirements from: {job_path}")
+        else:
+            print(f" Notice: No job requirements found at {job_path}. Proceeding with standard extraction.")
 
         print("\n Step 1: Extracting text from PDF...")
         raw_text = extract_text_from_pdf(selected_pdf_path)
         print(f" Extracted {len(raw_text)} characters")
         
         print("\n Step 2: Structuring text...")
-        structured_data = structure_text_with_llm(raw_text, prompt_path)
+        # Pass the job description to the structurer
+        structured_data = structure_text_with_llm(raw_text, prompt_path, job_desc)
         
         print("\n Step 3: Writing to Excel...")
         write_to_excel(structured_data, output_path)
@@ -98,9 +101,10 @@ def main(pdf_path: str | None = None,
 
 
 if __name__ == "__main__":
-    args = _parse_args()
+    args = parse_args()
     main(
         pdf_path=args.pdf_path,
         output_path=args.output_path,
         prompt_path=args.prompt_path,
+        job_path=args.job_path,
     )

@@ -1,0 +1,18 @@
+Job Title: AI/Python Backend Engineer
+Location: Remote
+Experience Required: 2+ Years
+
+Role Overview:
+We are looking for a backend software engineer to help build and integrate LLM-based pipelines into our core application. The ideal candidate has strong Python skills and experience working with document processing and external AI APIs.
+
+Required Skills & Qualifications:
+- Strong proficiency in Python.
+- Experience with LLM integrations (e.g., OpenAI, Gemini, Groq).
+- Familiarity with document parsing and data extraction (e.g., PDF processing, Regex).
+- Experience building REST APIs (FastAPI or Flask).
+- Version control using Git.
+- Strong problem-solving skills and ability to write clean, maintainable code.
+
+Nice to Have (Bonus):
+- Experience with prompt engineering and structured JSON outputs.
+- Familiarity with Pandas or Excel data manipulation (openpyxl, pandas).
