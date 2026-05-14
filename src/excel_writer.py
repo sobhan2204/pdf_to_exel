@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 
-def _to_excel_value(value):
+def to_excel_value(value):
     """Convert plain strings to richer Excel-friendly values where safe."""
     if value is None:
         return None
@@ -61,7 +61,7 @@ def write_to_excel(data: list, output_path: str = "data/output/Output.xlsx"):
             {
                 "#": idx,
                 "Key": str(key).strip() if key is not None else "",
-                "Value": _to_excel_value(value),
+                "Value": to_excel_value(value),
                 "Comments": str(comments).strip() if comments is not None else None,
             }
         )
